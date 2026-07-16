@@ -1,0 +1,43 @@
+# Base de données locale
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers générés
+tickets_tombola.pdf
+winners.json
+participants.csv
+
+# Dossier des QR codes
+tickets/
+
+# Environnement Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+
+# Local environment / secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Documentation locale / Reprise
+CONTINUATION.md

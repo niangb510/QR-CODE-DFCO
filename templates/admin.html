@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Tombola DFCO</title>
+    <style>
+        :root {
+            --dfco-red: #B40000;
+            --dfco-black: #111111;
+            --dfco-gold: #D4AF37;
+        }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f8f8f8;
+            color: var(--dfco-black);
+        }
+        header {
+            background: var(--dfco-red);
+            color: white;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 { margin: 0; font-size: 1.4rem; }
+        .container { padding: 2rem; max-width: 900px; margin: 0 auto; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--dfco-gold);
+        }
+        .stat-card h3 { margin: 0 0 0.5rem; color: #666; font-size: 0.95rem; }
+        .stat-card p { margin: 0; font-size: 1.8rem; font-weight: 700; color: var(--dfco-red); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .btn-export {
+            background: var(--dfco-red);
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .btn-export:hover { background: #8a0000; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: var(--dfco-red); color: white; }
+        tr:hover { background: #fff9f9; }
+        .empty { text-align: center; padding: 2rem; color: #666; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🛠️ Administration Tombola DFCO</h1>
+        <span>Golden Coast</span>
+    </header>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total tickets</h3>
+                <p>{{ total }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Participants</h3>
+                <p>{{ participants|length }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Taux de participation</h3>
+                <p>{% if total %}{{ ((participants|length / total) * 100)|round(1) }}%{% else %}0%{% endif %}</p>
+            </div>
+        </div>
+
+        <div class="admin-header">
+            <h2>Liste des participants</h2>
+            <a href="/admin/export" class="btn-export">📥 Exporter CSV</a>
+        </div>
+        {% if participants %}
+        <table>
+            <thead>
+                <tr>
+                    <th>N° Ticket</th>
+                    <th>Email</th>
+                    <th>Nom</th>
+                    <th>RGPD</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in participants %}
+                <tr>
+                    <td>{{ p.ticket_id }}</td>
+                    <td>{{ p.email }}</td>
+                    <td>{{ p.name or '-' }}</td>
+                    <td>{% if p.rgpd_consent %}✅{% else %}❌{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div class="empty">Aucun participant pour le moment.</div>
+        {% endif %}
+    </div>
+</body>
+</html>

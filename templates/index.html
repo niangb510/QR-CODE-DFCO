@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tombola DFCO - Golden Coast</title>
+    <style>
+        :root {
+            --dfco-red: #B40000;
+            --dfco-black: #111111;
+            --dfco-gold: #D4AF37;
+            --bg: #f8f8f8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--dfco-black);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        header {
+            width: 100%;
+            background: var(--dfco-red);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        header h1 { margin: 0; font-size: 1.6rem; }
+        header p { margin: 0.3rem 0 0; opacity: 0.9; }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem 1.5rem;
+            flex: 1;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-top: 5px solid var(--dfco-gold);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: var(--dfco-red);
+            font-size: 1.4rem;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="email"]:focus {
+            outline: none;
+            border-color: var(--dfco-red);
+        }
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--dfco-red);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover { background: #8a0000; }
+        button:active { transform: scale(0.98); }
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        .alert.success { background: #e6f9ed; color: #1a7c3e; }
+        .alert.error { background: #fdecec; color: #b40000; }
+        .prizes {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #fff9e6;
+            border-radius: 10px;
+            border-left: 4px solid var(--dfco-gold);
+        }
+        .prizes h3 { margin-top: 0; color: var(--dfco-gold); }
+        .prizes ul { margin: 0; padding-left: 1.2rem; }
+        .prizes li { margin-bottom: 0.3rem; }
+        .rgpd-label {
+            font-weight: normal;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .rgpd-label input { margin-top: 0.2rem; }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎟️ TOMBOLA DFCO</h1>
+        <p>Golden Coast - Gagne des lots du club</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Participe au tirage au sort</h2>
+            <p>Saisis ton numéro de ticket et ton email pour valider ta participation.</p>
+
+            {% if message %}
+                <div class="alert success">{{ message }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="alert error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/">
+                <div class="form-group">
+                    <label for="ticket_id">Numéro de ticket</label>
+                    <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" placeholder="Ex: A1B2C3D4" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Adresse email</label>
+                    <input type="email" id="email" name="email" placeholder="ton@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Prénom / Nom (optionnel)</label>
+                    <input type="text" id="name" name="name" placeholder="Jean Dupont">
+                </div>
+                <div class="form-group">
+                    <label class="rgpd-label">
+                        <input type="checkbox" name="rgpd">
+                        <span>J'accepte que mon email soit utilisé pour la base supporters DFCO et la politique de confidentialité.</span>
+                    </label>
+                </div>
+                <button type="submit">Valider ma participation</button>
+            </form>
+
+            <div class="prizes">
+                <h3>🎁 Lots à gagner</h3>
+                <ul>
+                    <li>1 maillot officiel DFCO dédicacé</li>
+                    <li>2 places pour un match à Gaston-Gérard</li>
+                    <li>Goodies du club (écharpe, casquette, mug)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        DFCO - Golden Coast | Collecte d'emails pour la base supporters
+    </footer>
+</body>
+</html>
