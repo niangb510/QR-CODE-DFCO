@@ -77,6 +77,16 @@ def init_db():
                 registered_at TEXT
             )
         """)
+        # Auto-génération de 50 tickets de départ si la base est vide (ex: démarrage sur Render)
+        row = conn.execute("SELECT COUNT(*) as total FROM tickets").fetchone()
+        if row["total"] == 0:
+            import uuid
+            now = datetime.now().isoformat()
+            initial_tickets = [(str(uuid.uuid4())[:8].upper(), 0, now) for _ in range(50)]
+            conn.executemany(
+                "INSERT OR IGNORE INTO tickets (ticket_id, used, created_at) VALUES (?, 0, ?)",
+                initial_tickets
+            )
 
 
 def ticket_exists(ticket_id):
@@ -253,6 +263,7 @@ def admin():
     participants, total_participants = get_all_participants(page=page)
     total = get_total_tickets()
     total_pages = max(1, (total_participants + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
+    csrf_token = generate_csrf_token()
 
     return render_template(
         "admin.html",
@@ -260,8 +271,34 @@ def admin():
         total=total,
         total_participants=total_participants,
         page=page,
-        total_pages=total_pages
+        total_pages=total_pages,
+        csrf_token=csrf_token
     )
+
+
+@app.route("/admin/generate", methods=["POST"])
+@admin_required
+def admin_generate():
+    if not validate_csrf():
+        make_response("CSRF token invalide", 400)
+        return redirect(url_for("admin"))
+
+    import uuid
+    count = request.form.get("count", 50, type=int)
+    count = max(1, min(count, 500))
+    now = datetime.now().isoformat()
+    new_tickets = [(str(uuid.uuid4())[:8].upper(), 0, now) for _ in range(count)]
+
+    try:
+        with get_db() as conn:
+            conn.executemany(
+                "INSERT OR IGNORE INTO tickets (ticket_id, used, created_at) VALUES (?, 0, ?)",
+                new_tickets
+            )
+    except sqlite3.Error:
+        pass
+
+    return redirect(url_for("admin"))
 
 
 @app.route("/admin/export")

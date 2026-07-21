@@ -359,6 +359,11 @@
         <div class="admin-header">
             <h2>📋 Liste des participants</h2>
             <div class="admin-actions">
+                <form method="POST" action="/admin/generate" style="display:inline;">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="count" value="50">
+                    <button type="submit" class="btn-export" style="background:#2563eb;">🎲 Générer +50 tickets</button>
+                </form>
                 <a href="/admin/export" class="btn-export">📥 Exporter CSV</a>
             </div>
         </div>
