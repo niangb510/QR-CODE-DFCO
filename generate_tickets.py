@@ -51,17 +51,18 @@ def register_fonts():
         ('ArialUnicode-Bold', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'),
     ]
 
-    for name, path in font_paths:
-        if os.path.exists(path):
-            pdfmetrics.registerFont(TTFont(name, path))
-            FONT_REGULAR = name
-            break
+    def try_register(fonts, default_fallback):
+        for name, path in fonts:
+            if os.path.exists(path):
+                try:
+                    pdfmetrics.registerFont(TTFont(name, path))
+                    return name
+                except Exception:
+                    continue
+        return default_fallback
 
-    for name, path in bold_font_paths:
-        if os.path.exists(path):
-            pdfmetrics.registerFont(TTFont(name, path))
-            FONT_BOLD = name
-            break
+    FONT_REGULAR = try_register(font_paths, FONT_REGULAR)
+    FONT_BOLD = try_register(bold_font_paths, FONT_BOLD)
 
 
 def generate_qr_code(ticket_id: str, base_url: str, size: int = 300) -> str:

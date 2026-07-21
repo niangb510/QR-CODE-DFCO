@@ -4,159 +4,461 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tombola DFCO - Golden Coast</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎟️</text></svg>">
     <style>
         :root {
             --dfco-red: #B40000;
+            --dfco-red-hover: #8a0000;
+            --dfco-red-light: #fff0f0;
             --dfco-black: #111111;
             --dfco-gold: #D4AF37;
-            --bg: #f8f8f8;
+            --dfco-gold-light: #fff9e6;
+            --bg: #f4f4f4;
+            --card-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, Arial, sans-serif;
             background: var(--bg);
             color: var(--dfco-black);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
+
+        /* Header */
         header {
             width: 100%;
-            background: var(--dfco-red);
+            background: linear-gradient(135deg, var(--dfco-red) 0%, #8a0000 100%);
             color: white;
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
         }
-        header h1 { margin: 0; font-size: 1.6rem; }
-        header p { margin: 0.3rem 0 0; opacity: 0.9; }
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--dfco-gold), #fff, var(--dfco-gold));
+        }
+        header .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        header .subtitle {
+            margin: 0.4rem 0 0;
+            opacity: 0.9;
+            font-size: 1.05rem;
+        }
+        header .gold-line {
+            width: 60px;
+            height: 3px;
+            background: var(--dfco-gold);
+            margin: 0.8rem auto 0;
+            border-radius: 2px;
+        }
+
+        /* Container */
         .container {
             width: 100%;
             max-width: 480px;
-            padding: 2rem 1.5rem;
+            padding: 2rem 1.2rem;
             flex: 1;
+            display: flex;
+            flex-direction: column;
         }
+
+        /* Card */
         .card {
             background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border-radius: 20px;
+            padding: 2rem 1.8rem;
+            box-shadow: var(--card-shadow);
             border-top: 5px solid var(--dfco-gold);
+            animation: slideUp 0.5s ease-out;
+            position: relative;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .card h2 {
-            margin-top: 0;
             color: var(--dfco-red);
-            font-size: 1.4rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
         }
+        .card .intro {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        /* Form groups */
         .form-group {
             margin-bottom: 1.2rem;
+            position: relative;
         }
-        label {
+        .form-group label {
             display: block;
             margin-bottom: 0.4rem;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            color: #444;
+            transition: color var(--transition);
         }
-        input[type="text"], input[type="email"] {
+        .form-group label .required {
+            color: var(--dfco-red);
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .input-wrapper .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            pointer-events: none;
+            opacity: 0.5;
+            transition: opacity var(--transition);
+        }
+        input[type="text"],
+        input[type="email"] {
             width: 100%;
-            padding: 0.85rem;
+            padding: 0.85rem 1rem 0.85rem 2.6rem;
             border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        input[type="text"]:focus, input[type="email"]:focus {
+            font-family: inherit;
+            background: #fafafa;
+            transition: all var(--transition);
             outline: none;
-            border-color: var(--dfco-red);
         }
-        button {
+        input[type="text"]:focus,
+        input[type="email"]:focus {
+            border-color: var(--dfco-red);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(180, 0, 0, 0.08);
+        }
+        input[type="text"]:focus ~ .input-icon,
+        input[type="email"]:focus ~ .input-icon {
+            opacity: 1;
+            color: var(--dfco-red);
+        }
+        input[type="text"]:hover:not(:focus),
+        input[type="email"]:hover:not(:focus) {
+            border-color: #ccc;
+        }
+        input::placeholder {
+            color: #aaa;
+        }
+
+        /* RGPD checkbox */
+        .rgpd-wrapper {
+            background: var(--dfco-gold-light);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all var(--transition);
+        }
+        .rgpd-wrapper:hover {
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+        .rgpd-label {
+            font-weight: normal !important;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            cursor: pointer;
+            color: #444;
+            line-height: 1.5;
+        }
+        .rgpd-label input[type="checkbox"] {
+            margin-top: 0.25rem;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            accent-color: var(--dfco-red);
+            cursor: pointer;
+        }
+        .rgpd-label strong {
+            color: var(--dfco-red);
+        }
+
+        /* Button */
+        .btn-submit {
             width: 100%;
             padding: 1rem;
-            background: var(--dfco-red);
+            background: linear-gradient(135deg, var(--dfco-red) 0%, #8a0000 100%);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1.1rem;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
-        button:hover { background: #8a0000; }
-        button:active { transform: scale(0.98); }
-        .alert {
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-        .alert.success { background: #e6f9ed; color: #1a7c3e; }
-        .alert.error { background: #fdecec; color: #b40000; }
-        .prizes {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: #fff9e6;
-            border-radius: 10px;
-            border-left: 4px solid var(--dfco-gold);
-        }
-        .prizes h3 { margin-top: 0; color: var(--dfco-gold); }
-        .prizes ul { margin: 0; padding-left: 1.2rem; }
-        .prizes li { margin-bottom: 0.3rem; }
-        .rgpd-label {
-            font-weight: normal;
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            cursor: pointer;
         }
-        .rgpd-label input { margin-top: 0.2rem; }
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(180, 0, 0, 0.3);
+        }
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .btn-submit .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        .btn-submit.loading .spinner {
+            display: inline-block;
+        }
+        .btn-submit.loading .btn-text {
+            display: none;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 1.2rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .alert.success {
+            background: linear-gradient(135deg, #e6f9ed, #d0f0dc);
+            color: #1a7c3e;
+            border: 1px solid #b8e6c8;
+        }
+        .alert.success::before {
+            content: '✅';
+            font-size: 1.2rem;
+        }
+        .alert.error {
+            background: linear-gradient(135deg, #fdecec, #f8d8d8);
+            color: #b40000;
+            border: 1px solid #f0c0c0;
+        }
+        .alert.error::before {
+            content: '❌';
+            font-size: 1.2rem;
+        }
+
+        /* Success message special */
+        .success-card {
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+        .success-card .checkmark {
+            width: 64px;
+            height: 64px;
+            background: #1a7c3e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.8rem;
+            color: white;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .success-card h2 {
+            color: #1a7c3e !important;
+        }
+
+        /* Prizes section */
+        .prizes {
+            margin-top: 1.8rem;
+            padding: 1.2rem 1.2rem 0.8rem;
+            background: var(--dfco-gold-light);
+            border-radius: 14px;
+            border-left: 4px solid var(--dfco-gold);
+            animation: slideUp 0.5s ease-out 0.2s both;
+        }
+        .prizes h3 {
+            color: #8a7300;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .prizes ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .prizes li {
+            padding: 0.4rem 0;
+            font-size: 0.9rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .prizes li::before {
+            content: '🎁';
+            font-size: 0.9rem;
+        }
+        .prizes li:nth-child(2)::before { content: '⚽'; }
+        .prizes li:nth-child(3)::before { content: '🧣'; }
+
+        /* Footer */
         footer {
             text-align: center;
-            padding: 1rem;
-            font-size: 0.85rem;
-            color: #666;
+            padding: 1.5rem 1rem;
+            font-size: 0.82rem;
+            color: #888;
+            border-top: 1px solid #eee;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            header h1 { font-size: 1.5rem; }
+            .card { padding: 1.5rem 1.2rem; border-radius: 16px; }
+            .container { padding: 1.2rem 1rem; }
+        }
+
+        /* Field error shake */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .shake {
+            animation: shake 0.5s ease-in-out;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>🎟️ TOMBOLA DFCO</h1>
-        <p>Golden Coast - Gagne des lots du club</p>
+        <div class="header-content">
+            <h1>🎟️ TOMBOLA DFCO</h1>
+            <p class="subtitle">Golden Coast — Gagne des lots du club</p>
+            <div class="gold-line"></div>
+        </div>
     </header>
 
     <div class="container">
         <div class="card">
-            <h2>Participe au tirage au sort</h2>
-            <p>Saisis ton numéro de ticket et ton email pour valider ta participation.</p>
-
             {% if message %}
-                <div class="alert success">{{ message }}</div>
-            {% endif %}
+            <div class="success-card">
+                <div class="checkmark">✓</div>
+                <h2>🎉 Participation confirmée !</h2>
+                <p style="color:#555; margin-top:0.5rem;">{{ message }}</p>
+                <p style="color:#888; margin-top:1rem; font-size:0.9rem;">
+                    Tu recevras un email si tu es tiré·e au sort. Bonne chance ! 🍀
+                </p>
+            </div>
+
+            {% else %}
+            <h2>Participe au tirage au sort</h2>
+            <p class="intro">Scanne ton QR code ou saisis ton numéro de ticket ci-dessous.</p>
+
             {% if error %}
                 <div class="alert error">{{ error }}</div>
             {% endif %}
 
-            <form method="POST" action="/">
+            <form method="POST" action="/" id="participation-form" novalidate>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
                 <div class="form-group">
-                    <label for="ticket_id">Numéro de ticket</label>
-                    <input type="text" id="ticket_id" name="ticket_id" value="{{ ticket_id }}" placeholder="Ex: A1B2C3D4" required>
+                    <label for="ticket_id">Numéro de ticket <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="ticket_id" name="ticket_id"
+                               value="{{ ticket_id }}"
+                               placeholder="Ex: A1B2C3D4"
+                               maxlength="12"
+                               autocomplete="off"
+                               required>
+                        <span class="input-icon">🎫</span>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label for="email">Adresse email</label>
-                    <input type="email" id="email" name="email" placeholder="ton@email.com" required>
+                    <label for="email">Adresse email <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" name="email"
+                               placeholder="ton@email.com"
+                               autocomplete="email"
+                               required>
+                        <span class="input-icon">✉️</span>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label for="name">Prénom / Nom (optionnel)</label>
-                    <input type="text" id="name" name="name" placeholder="Jean Dupont">
+                    <label for="name">Prénom & Nom <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="name" name="name"
+                               placeholder="Jean Dupont"
+                               autocomplete="name"
+                               minlength="2"
+                               required>
+                        <span class="input-icon">👤</span>
+                    </div>
                 </div>
-                <div class="form-group">
+
+                <div class="rgpd-wrapper">
                     <label class="rgpd-label">
-                        <input type="checkbox" name="rgpd">
-                        <span>J'accepte que mon email soit utilisé pour la base supporters DFCO et la politique de confidentialité.</span>
+                        <input type="checkbox" name="rgpd" required>
+                        <span>
+                            J'accepte que mon email soit utilisé pour la <strong>base supporters DFCO</strong>
+                            et la <strong>politique de confidentialité</strong>.
+                        </span>
                     </label>
                 </div>
-                <button type="submit">Valider ma participation</button>
+
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    <span class="btn-text">Valider ma participation</span>
+                    <span class="spinner"></span>
+                </button>
             </form>
 
             <div class="prizes">
@@ -167,11 +469,44 @@
                     <li>Goodies du club (écharpe, casquette, mug)</li>
                 </ul>
             </div>
+            {% endif %}
         </div>
     </div>
 
     <footer>
-        DFCO - Golden Coast | Collecte d'emails pour la base supporters
+        DFCO — Golden Coast • Collecte d'emails pour la base supporters
     </footer>
+
+    <script>
+        // Loading state on submit
+        const form = document.getElementById('participation-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const btn = document.getElementById('submit-btn');
+                btn.classList.add('loading');
+                btn.disabled = true;
+            });
+        }
+
+        // Auto-uppercase ticket field
+        const ticketField = document.getElementById('ticket_id');
+        if (ticketField) {
+            ticketField.addEventListener('input', function() {
+                this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
+        }
+
+        // Shake animation on error
+        const errorAlert = document.querySelector('.alert.error');
+        if (errorAlert) {
+            errorAlert.classList.add('shake');
+        }
+
+        // Focus first field on load
+        const firstInput = document.querySelector('input:not([type="checkbox"])');
+        if (firstInput && !firstInput.value) {
+            firstInput.focus();
+        }
+    </script>
 </body>
 </html>

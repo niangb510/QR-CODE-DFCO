@@ -8,10 +8,14 @@ Stockage en SQLite pour éviter les problèmes de concurrence.
 import os
 import re
 import time
+import secrets
 import sqlite3
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, make_response
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, flash, make_response, session
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dfco-golden-coast-tombola-2024")
@@ -31,6 +35,9 @@ EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 # Rate limiting simple en mémoire (par IP)
 IP_TRACKER = {}
 COOLDOWN_SECONDS = 10
+
+# Pagination admin
+ITEMS_PER_PAGE = 20
 
 
 def get_client_ip():
@@ -52,6 +59,8 @@ def clean_ip_tracker():
 def get_db():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
     return conn
 
 
@@ -71,50 +80,100 @@ def init_db():
 
 
 def ticket_exists(ticket_id):
-    with get_db() as conn:
-        row = conn.execute("SELECT 1 FROM tickets WHERE ticket_id = ?", (ticket_id,)).fetchone()
-        return row is not None
+    try:
+        with get_db() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM tickets WHERE ticket_id = ?", (ticket_id,)
+            ).fetchone()
+            return row is not None
+    except sqlite3.Error:
+        return False
 
 
 def register_participant(ticket_id, email, name, rgpd):
+    """Enregistre un participant avec une réservation atomique du ticket."""
     if not ticket_exists(ticket_id):
         return False, "Numéro de ticket invalide."
 
-    with get_db() as conn:
-        row = conn.execute(
-            "SELECT used FROM tickets WHERE ticket_id = ?", (ticket_id,)
-        ).fetchone()
-        if row["used"]:
-            return False, "Ce ticket a déjà été utilisé."
+    try:
+        with get_db() as conn:
+            now = datetime.now().isoformat()
+            # Réservation atomique : UPDATE seulement si used = 0
+            cursor = conn.execute(
+                """UPDATE tickets
+                   SET used = 1, email = ?, name = ?,
+                       rgpd_consent = ?, registered_at = ?
+                   WHERE ticket_id = ? AND used = 0""",
+                (email, name, 1 if rgpd else 0, now, ticket_id)
+            )
+            if cursor.rowcount == 0:
+                # Vérifier si le ticket existe mais est déjà utilisé
+                row = conn.execute(
+                    "SELECT used FROM tickets WHERE ticket_id = ?", (ticket_id,)
+                ).fetchone()
+                if row and row["used"]:
+                    return False, "Ce ticket a déjà été utilisé."
+                return False, "Numéro de ticket invalide."
 
-        now = datetime.now().isoformat()
-        conn.execute(
-            "UPDATE tickets SET used = 1, email = ?, name = ?, rgpd_consent = ?, registered_at = ? WHERE ticket_id = ?",
-            (email, name, 1 if rgpd else 0, now, ticket_id)
-        )
-    return True, "Participation enregistrée avec succès !"
+        return True, "Participation enregistrée avec succès !"
+    except sqlite3.Error:
+        return False, "Erreur technique. Veuillez réessayer."
 
 
-def get_participants():
-    with get_db() as conn:
-        rows = conn.execute(
-            "SELECT ticket_id, email, name FROM tickets WHERE used = 1 ORDER BY registered_at DESC"
-        ).fetchall()
-        return [dict(r) for r in rows]
+def get_all_participants(page=None):
+    """Récupère les participants, optionnellement avec pagination."""
+    try:
+        with get_db() as conn:
+            if page is not None:
+                offset = (page - 1) * ITEMS_PER_PAGE
+                rows = conn.execute(
+                    """SELECT ticket_id, email, name, rgpd_consent, registered_at
+                       FROM tickets WHERE used = 1
+                       ORDER BY registered_at DESC
+                       LIMIT ? OFFSET ?""",
+                    (ITEMS_PER_PAGE, offset)
+                ).fetchall()
+                total_row = conn.execute(
+                    "SELECT COUNT(*) as total FROM tickets WHERE used = 1"
+                ).fetchone()
+                total = total_row["total"]
+                return [dict(r) for r in rows], total
+            else:
+                rows = conn.execute(
+                    """SELECT ticket_id, email, name, rgpd_consent, registered_at
+                       FROM tickets WHERE used = 1
+                       ORDER BY registered_at DESC"""
+                ).fetchall()
+                return [dict(r) for r in rows]
+    except sqlite3.Error:
+        return [] if page is None else ([], 0)
 
 
 def get_total_tickets():
-    with get_db() as conn:
-        row = conn.execute("SELECT COUNT(*) as total FROM tickets").fetchone()
-        return row["total"]
+    try:
+        with get_db() as conn:
+            row = conn.execute("SELECT COUNT(*) as total FROM tickets").fetchone()
+            return row["total"]
+    except sqlite3.Error:
+        return 0
 
 
-def get_all_participants():
-    with get_db() as conn:
-        rows = conn.execute(
-            "SELECT ticket_id, email, name, rgpd_consent, registered_at FROM tickets WHERE used = 1 ORDER BY registered_at DESC"
-        ).fetchall()
-        return [dict(r) for r in rows]
+def generate_csrf_token():
+    """Génère et stocke un token CSRF dans la session."""
+    if "_csrf_token" not in session:
+        session["_csrf_token"] = secrets.token_hex(32)
+    return session["_csrf_token"]
+
+
+def validate_csrf():
+    """Valide le token CSRF soumis."""
+    token = request.form.get("_csrf_token")
+    stored = session.get("_csrf_token")
+    if not token or not stored or not secrets.compare_digest(token, stored):
+        return False
+    # Le token reste stable pendant toute la session pour éviter
+    # de périmer le formulaire après une erreur de validation.
+    return True
 
 
 def check_auth(username, password):
@@ -141,6 +200,7 @@ def health():
 @app.route("/", methods=["GET", "POST"])
 def index():
     ticket_id = request.args.get("ticket", "").upper().strip()
+    csrf_token = generate_csrf_token()
     message = None
     error = None
 
@@ -149,8 +209,12 @@ def index():
         ip = get_client_ip()
         now = time.time()
 
+        # Vérifier le rate limiting
         if ip in IP_TRACKER and (now - IP_TRACKER[ip]) < COOLDOWN_SECONDS:
             error = "Veuillez patienter quelques secondes avant de réessayer."
+        # Valider le token CSRF
+        elif not validate_csrf():
+            error = "Session invalide. Veuillez réessayer."
         else:
             ticket_id = request.form.get("ticket_id", "").upper().strip()
             email = request.form.get("email", "").strip().lower()
@@ -161,6 +225,8 @@ def index():
                 error = "Merci de renseigner le numéro de ticket et l'email."
             elif not EMAIL_REGEX.match(email):
                 error = "Merci de saisir un email valide."
+            elif not name or len(name.strip()) < 2:
+                error = "Merci de saisir votre prénom et nom."
             elif not rgpd:
                 error = "Vous devez accepter les conditions et la politique de confidentialité."
             else:
@@ -171,15 +237,31 @@ def index():
                 else:
                     error = msg
 
-    return render_template("index.html", ticket_id=ticket_id, message=message, error=error)
+    return render_template(
+        "index.html",
+        ticket_id=ticket_id,
+        message=message,
+        error=error,
+        csrf_token=csrf_token
+    )
 
 
 @app.route("/admin")
 @admin_required
 def admin():
-    participants = get_participants()
+    page = request.args.get("page", 1, type=int)
+    participants, total_participants = get_all_participants(page=page)
     total = get_total_tickets()
-    return render_template("admin.html", participants=participants, total=total)
+    total_pages = max(1, (total_participants + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
+
+    return render_template(
+        "admin.html",
+        participants=participants,
+        total=total,
+        total_participants=total_participants,
+        page=page,
+        total_pages=total_pages
+    )
 
 
 @app.route("/admin/export")
@@ -187,10 +269,11 @@ def admin():
 def export_participants():
     import csv
     import io
+    participants = get_all_participants()  # sans pagination
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["ticket_id", "email", "name", "rgpd_consent", "registered_at"])
-    for p in get_all_participants():
+    for p in participants:
         writer.writerow([p["ticket_id"], p["email"], p["name"], p["rgpd_consent"], p["registered_at"]])
 
     response = make_response(output.getvalue())
