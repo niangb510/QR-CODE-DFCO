@@ -84,7 +84,7 @@ def init_db():
             now = datetime.now().isoformat()
             initial_tickets = [(str(uuid.uuid4())[:8].upper(), 0, now) for _ in range(50)]
             conn.executemany(
-                "INSERT OR IGNORE INTO tickets (ticket_id, used, created_at) VALUES (?, 0, ?)",
+                "INSERT OR IGNORE INTO tickets (ticket_id, used, created_at) VALUES (?, ?, ?)",
                 initial_tickets
             )
 
@@ -292,7 +292,7 @@ def admin_generate():
     try:
         with get_db() as conn:
             conn.executemany(
-                "INSERT OR IGNORE INTO tickets (ticket_id, used, created_at) VALUES (?, 0, ?)",
+                "INSERT OR IGNORE INTO tickets (ticket_id, used, created_at) VALUES (?, ?, ?)",
                 new_tickets
             )
     except sqlite3.Error:
